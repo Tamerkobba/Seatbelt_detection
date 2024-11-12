@@ -125,10 +125,10 @@ def process_video(video_path, model_path, resnet_model_path, output_path, frame_
 
 
 if __name__ == "__main__":
-    input_video = "Traffic IP Camera video.mp4"
-    yolo_model_weights = "runs/detect/train/weights/best.pt"
-    resnet_model_weights = "checkpoint.pth.tar"
-    output_video = "output_video_with_labels.mp4"
+    input_video = ".mp4"
+    yolo_model_weights = "../Models/yolo11m_best.pt" #put global path
+    resnet_model_weights = "../Models/ResNet18.pth.tar"
+    output_video = "output_video_with_labels#.mp4"
     frame_skip = 1
     resize_dimensions = (1280, 720)
 

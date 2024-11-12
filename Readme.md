@@ -1,1 +1,1 @@
-Because of github restrictions only 1000 files were included of the training and validation sets
+Link for full dataset will be included later

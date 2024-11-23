@@ -128,8 +128,8 @@ def process_video(video_path, model_path, densenet121_model_path, output_path, f
 
 if __name__ == "__main__":
     input_video = "4.mp4"
-    yolo_model_weights = "../Models/last.pt" #put global path
-    densenet121_model_weights = "../Models/Best.pth.tar"
+    yolo_model_weights = "../Models/best.pt" #put global path
+    densenet121_model_weights = "../Models/DenseNet.pth.tar"
     output_video = "output_video_with_labels_4.mp4"
     frame_skip = 0
     resize_dimensions = (1280, 720)

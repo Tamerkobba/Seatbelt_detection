@@ -113,7 +113,7 @@ scheduler = torch.optim.lr_scheduler.OneCycleLR(
 )
 model.to('cuda')
 
-def save_checkpoint(state,filename='Best.pth.tar'):
+def save_checkpoint(state,filename='DenseNet.pth.tar'):
     print("=> Saving checkpoint")
     torch.save(state, filename)
 

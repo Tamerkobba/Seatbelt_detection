@@ -18,13 +18,13 @@ The project combines the power of object detection and image classification:
 
 ## Video Demos
 
-### Demo 1: System Running on Sample Video
+### Demo 1
 [![Demo 1](https://img.youtube.com/vi/64xSVSXQAUE/0.jpg)](https://www.youtube.com/watch?v=64xSVSXQAUE)
 
-### Demo 2: Results on Diverse Conditions
+### Demo 2
 [![Demo 2](https://img.youtube.com/vi/gEB4qA7gZG4/0.jpg)](https://www.youtube.com/watch?v=gEB4qA7gZG4)
 
-### Demo 3: Edge Cases and Challenges
+### Demo 3
 [![Demo 3](https://img.youtube.com/vi/v7ML6Is3vEI/0.jpg)](https://www.youtube.com/watch?v=v7ML6Is3vEI)
 
 ---

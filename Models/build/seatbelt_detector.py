@@ -1,26 +1,15 @@
 import torch
-import torchvision
 import torchvision.transforms as transforms
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-import pandas as pd
-import numpy as np
-from networkx.classes import non_edges
-from torch.optim import lr_scheduler
 from torch.utils.data import Dataset, DataLoader
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
+import pandas as pd
 import os
 from PIL import Image
-from torchvision import models
+from sklearn.model_selection import train_test_split
 from torchvision.models import densenet121, DenseNet121_Weights
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix, roc_curve, auc
-import matplotlib.pyplot as plt
-from sklearn.metrics import ConfusionMatrixDisplay
-import math
 
-df=pd.read_csv('../../classification_images/labels.csv')
+df=pd.read_csv('../../../classification_images/labels.csv')
 
 df = df.drop_duplicates()
 
@@ -90,8 +79,8 @@ transform = transforms.Compose([
 
 
 # Create datasets
-train_dataset = ImageDataset(train_df, '../../classification_images', transform=transform)
-val_dataset = ImageDataset(valid_df, '../../classification_images', transform=transform)
+train_dataset = ImageDataset(train_df, '../../../classification_images', transform=transform)
+val_dataset = ImageDataset(valid_df, '../../../classification_images', transform=transform)
 
 # Create dataloaders
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4)

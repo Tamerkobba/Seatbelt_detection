@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 
 # Function to preprocess and classify the cropped windshield image using densenet12118
-def classify_with_densenet121(cropped_image, model, device,threshold=0.6):
+def classify_with_densenet121(cropped_image, model, device,threshold=0.3):
     """
     Classify the cropped image (windshield) using densenet12118 model.
     Args:
@@ -34,6 +34,8 @@ def classify_with_densenet121(cropped_image, model, device,threshold=0.6):
         # Apply threshold
     return 1 if not_wearing_prob >= threshold else 0
 
+
+import time
 
 def process_video(video_path, model_path, densenet121_model_path, output_path, frame_skip=1, resize_dim=None,
                   windshield_class_id=0):
@@ -79,6 +81,8 @@ def process_video(video_path, model_path, densenet121_model_path, output_path, f
         out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
         frame_count = 0
+        processing_times = []  # List to store processing times for each frame
+
         with tqdm(total=total_frames, desc="Processing video") as pbar:
             while cap.isOpened():
                 ret, frame = cap.read()
@@ -86,6 +90,8 @@ def process_video(video_path, model_path, densenet121_model_path, output_path, f
                     break
 
                 if frame_count % (frame_skip + 1) == 0:
+                    start_time = time.time()  # Start timing
+
                     if resize_dim:
                         frame = cv2.resize(frame, resize_dim)
 
@@ -105,6 +111,9 @@ def process_video(video_path, model_path, densenet121_model_path, output_path, f
                             cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                                         (0, 255, 0) if predicted_class == 0 else (0, 0, 255), 2)
 
+                    end_time = time.time()  # End timing
+                    frame_time = end_time - start_time
+                    processing_times.append(frame_time)
                     out.write(frame)
 
                 frame_count += 1
@@ -114,7 +123,10 @@ def process_video(video_path, model_path, densenet121_model_path, output_path, f
         out.release()
         cv2.destroyAllWindows()
 
-        print(f"\nVideo processing completed. Output saved to: {output_path}")
+        # Calculate and print average processing time
+        average_time = np.mean(processing_times)
+        print(f"\nAverage processing time per frame: {average_time:.4f} seconds")
+        print(f"Video processing completed. Output saved to: {output_path}")
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")
@@ -127,9 +139,9 @@ def process_video(video_path, model_path, densenet121_model_path, output_path, f
 
 
 if __name__ == "__main__":
-    input_video = "4.mp4"
-    yolo_model_weights = "../Models/best.pt" #put global path
-    densenet121_model_weights = "../Models/DenseNet.pth.tar"
+    input_video = "Video Test/1.mp4"
+    yolo_model_weights = "Models/runs/train/weights/best.pt" #put global path
+    densenet121_model_weights = "Models/DenseNet.pth.tar"
     output_video = "output_video_with_labels_4.mp4"
     frame_skip = 0
     resize_dimensions = (1280, 720)

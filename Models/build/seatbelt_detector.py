@@ -20,7 +20,7 @@ def determine_class(row):
         return 'No Seatbelt'
     return 'Unknown'
 
-
+df['Class'] = df.apply(determine_class, axis=1)
 train_df, valid_df = train_test_split(
     main_df,
     test_size=0.2,

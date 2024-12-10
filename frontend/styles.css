@@ -1,0 +1,97 @@
+/* Use a modern Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    font-weight: 600;
+    color: #333;
+}
+
+button {
+    font-weight: 600;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+#videoElement, #processedCanvas {
+    background-color: #000;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.container {
+    max-width: 1200px;
+}
+
+.row {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+h5 {
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.d-flex {
+    gap: 10px;
+    justify-content: center;
+}
+
+button.btn-primary {
+    background: linear-gradient(90deg, #4e54c8, #8f94fb);
+    color: #fff;
+}
+
+button.btn-success {
+    background: linear-gradient(90deg, #56ab2f, #a8e063);
+    color: #fff;
+}
+
+button.btn-primary:hover, button.btn-success:hover {
+    filter: brightness(1.1);
+}
+
+video, canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+@media (max-width: 768px) {
+    .row > div {
+        margin-bottom: 20px;
+    }
+
+    #videoElement, #processedCanvas {
+        width: 100%;
+        height: auto;
+    }
+
+    h5 {
+        font-size: 1.1rem;
+    }
+}

@@ -21,12 +21,6 @@ def determine_class(row):
     return 'Unknown'
 
 
-df['Class'] = df.apply(determine_class, axis=1)
-small_classes = df['Class'].value_counts()[df['Class'].value_counts() < 5].index
-main_df = df[~df['Class'].isin(small_classes)]
-_= df[df['Class'].isin(small_classes)]
-
-
 train_df, valid_df = train_test_split(
     main_df,
     test_size=0.2,

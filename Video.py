@@ -26,6 +26,7 @@ def classify_with_densenet121(cropped_image, model, device,threshold=0.3):
     input_tensor = transform(cropped_image).unsqueeze(0).to(device)
     model.eval()
 
+
     with torch.no_grad():
         outputs = model(input_tensor)
         probabilities = torch.nn.functional.softmax(outputs, dim=1)  # Use softmax to get probabilities

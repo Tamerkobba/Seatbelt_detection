@@ -20,7 +20,7 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support, con
 from sklearn.metrics import ConfusionMatrixDisplay
 
 
-df = pd.read_csv('../../classification_images/labels.csv')
+df = pd.read_csv('../../../classification_images/labels.csv')
 
 df.head()
 
@@ -44,9 +44,9 @@ _ = df[df['Class'].isin(small_classes)]
 
 train_df, valid_df = train_test_split(
     main_df,
-    test_size=0.15,
+    test_size=0.2,
     stratify=main_df['Class'],
-    random_state=645
+    random_state=420
 )
 
 
@@ -88,8 +88,8 @@ transform = transforms.Compose([
 ])
 
 # Create datasets
-train_dataset = ImageDataset(train_df, '../../classification_images', transform=transform)
-val_dataset = ImageDataset(valid_df, '../../classification_images', transform=transform)
+train_dataset = ImageDataset(train_df, '../../../classification_images', transform=transform)
+val_dataset = ImageDataset(valid_df, '../../../classification_images', transform=transform)
 
 # Create dataloaders
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4)
@@ -166,35 +166,41 @@ def metrics():
         print(f"Recall: {val_metrics['recall']:.4f}")
         print(f"F1-Score: {val_metrics['f1']:.4f}")
 
-        def plot_confusion_matrix(conf_matrix, title):
-            fig, ax = plt.subplots(figsize=(8, 6))  # Explicitly create a figure and axis
-            disp = ConfusionMatrixDisplay(confusion_matrix=conf_matrix)
-            disp.plot(cmap='Blues', ax=ax)  # Pass the axis to avoid creating a new one
-            ax.set_title(title)  # Set the title for the axis
-            plt.show()  # Show the plot
+        # Evaluate at different thresholds
+        def evaluate_at_thresholds(y_true, y_scores, thresholds):
+            results = []
+            for threshold in thresholds:
+                y_pred = (y_scores[:, 1] >= threshold).astype(int)
+                accuracy = accuracy_score(y_true, y_pred)
+                precision, recall, f1, _ = precision_recall_fscore_support(y_true, y_pred, average='binary')
+                results.append({'Threshold': threshold, 'Accuracy': accuracy, 'Precision': precision, 'Recall': recall,
+                                'F1-Score': f1})
+            return pd.DataFrame(results)
 
-        plot_confusion_matrix(train_metrics['confusion_matrix'], 'Training Confusion Matrix')
-        plot_confusion_matrix(val_metrics['confusion_matrix'], 'Validation Confusion Matrix')
-        if y_scores_train.shape[1] == 2:
-            def plot_roc_curve(y_true, y_scores, title):
-                fpr, tpr, _ = roc_curve(y_true, y_scores[:, 1])
-                roc_auc = auc(fpr, tpr)
+        print("\nEvaluating Metrics at Different Thresholds...")
+        thresholds = np.arange(0.1, 1.0, 0.1)
+        results_df = evaluate_at_thresholds(y_true_val, y_scores_val, thresholds)
+        print(results_df)
 
-                plt.figure(figsize=(8, 6))
-                plt.plot(fpr, tpr, color='blue', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
-                plt.plot([0, 1], [0, 1], color='gray', linestyle='--')
-                plt.xlabel('False Positive Rate')
-                plt.ylabel('True Positive Rate')
-                plt.title(title)
-                plt.legend(loc='lower right')
-                plt.show()
-                return roc_auc
+        def plot_metrics(results_df):
+            plt.figure(figsize=(10, 6))
+            plt.plot(results_df['Threshold'], results_df['Accuracy'], label='Accuracy', marker='o')
+            plt.plot(results_df['Threshold'], results_df['Precision'], label='Precision', marker='o')
+            plt.plot(results_df['Threshold'], results_df['Recall'], label='Recall', marker='o')
+            plt.plot(results_df['Threshold'], results_df['F1-Score'], label='F1-Score', marker='o')
 
-            train_auc = plot_roc_curve(y_true_train, y_scores_train, 'Training ROC Curve')
-            val_auc = plot_roc_curve(y_true_val, y_scores_val, 'Validation ROC Curve')
+            plt.xlabel('Threshold')
+            plt.ylabel('Metric Value')
+            plt.title('Metrics vs. Threshold')
+            plt.legend()
+            plt.grid()
+            plt.show()
+
+        plot_metrics(results_df)
+
         return model, train_metrics, val_metrics
 
-    checkpoint_path = 'Best.pth.tar'
+    checkpoint_path = '../DenseNet.pth.tar'
 
     model, train_metrics, val_metrics = load_and_evaluate_model(
         checkpoint_path=checkpoint_path,

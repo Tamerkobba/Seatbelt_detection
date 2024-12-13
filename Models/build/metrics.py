@@ -20,9 +20,8 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support, con
 from sklearn.metrics import ConfusionMatrixDisplay
 
 
-df = pd.read_csv('../../../classification_images/labels.csv')
+df = pd.read_csv('')
 
-df.head()
 
 df = df.drop_duplicates()
 
@@ -88,8 +87,8 @@ transform = transforms.Compose([
 ])
 
 # Create datasets
-train_dataset = ImageDataset(train_df, '../../../classification_images', transform=transform)
-val_dataset = ImageDataset(valid_df, '../../../classification_images', transform=transform)
+train_dataset = ImageDataset(train_df, '', transform=transform)
+val_dataset = ImageDataset(valid_df, '', transform=transform)
 
 # Create dataloaders
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4)

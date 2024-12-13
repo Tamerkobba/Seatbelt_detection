@@ -1,16 +1,17 @@
 import cv2
 import os
+from torch import nn
 from ultralytics import YOLO
 import torch
 from torchvision import models, transforms
 import numpy as np
 from tqdm import tqdm
 
+# Function to preprocess and classify the cropped windshield image using densenet121
 
-# Function to preprocess and classify the cropped windshield image using densenet12118
-def classify_with_densenet121(cropped_image, model, device,threshold=0.3):
+def classify_with_densenet121(cropped_image, model, device, threshold=0.5):
     """
-    Classify the cropped image (windshield) using densenet12118 model.
+    Classify the cropped image (windshield) using densenet121 model.
     Args:
         cropped_image (ndarray): Cropped windshield image.
         model (torch.nn.Module): Pretrained densenet121 model.
@@ -26,36 +27,24 @@ def classify_with_densenet121(cropped_image, model, device,threshold=0.3):
     input_tensor = transform(cropped_image).unsqueeze(0).to(device)
     model.eval()
 
-
     with torch.no_grad():
         outputs = model(input_tensor)
         probabilities = torch.nn.functional.softmax(outputs, dim=1)  # Use softmax to get probabilities
         not_wearing_prob = probabilities[0][1].item()  # Probability of 'Not Wearing Seatbelt'
 
-        # Apply threshold
-    return 1 if not_wearing_prob >= threshold else 0
+    return not_wearing_prob, 1 if not_wearing_prob >= threshold else 0
 
 
 import time
 
 def process_video(video_path, model_path, densenet121_model_path, output_path, frame_skip=1, resize_dim=None,
                   windshield_class_id=0):
-    """
-    Process a video with YOLO object detection and classify seatbelt usage on windshields.
-    Args:
-        video_path (str): Path to input video.
-        model_path (str): Path to YOLO model weights.
-        densenet121_model_path (str): Path to densenet121 model weights.
-        output_path (str): Path for output video.
-        frame_skip (int): Number of frames to skip between processing.
-        resize_dim (tuple): Optional (width, height) to resize frames.
-        windshield_class_id (int): The class ID for the windshield in the YOLO model.
-    """
     try:
         yolo_model = YOLO(model_path)
         densenet121_model = models.densenet121()
         num_features = densenet121_model.classifier.in_features
         densenet121_model.classifier = torch.nn.Linear(num_features, 2)
+
 
         model_dict = torch.load(densenet121_model_path, map_location=torch.device('cpu'))
         state_dict = model_dict['state_dict'] if 'state_dict' in model_dict else model_dict
@@ -104,8 +93,8 @@ def process_video(video_path, model_path, densenet121_model_path, output_path, f
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
                             windshield_crop = frame[y1:y2, x1:x2]
 
-                            predicted_class = classify_with_densenet121(windshield_crop, densenet121_model, device)
-                            label = "Wearing Seatbelt" if predicted_class == 0 else "Not Wearing Seatbelt"
+                            prob, predicted_class = classify_with_densenet121(windshield_crop, densenet121_model, device)
+                            label = f"{'Not Wearing Seatbelt' if predicted_class == 1 else 'Wearing Seatbelt'} ({prob:.2f})"
 
                             cv2.rectangle(frame, (x1, y1), (x2, y2),
                                           (0, 255, 0) if predicted_class == 0 else (0, 0, 255), 2)
@@ -122,7 +111,6 @@ def process_video(video_path, model_path, densenet121_model_path, output_path, f
 
         cap.release()
         out.release()
-        cv2.destroyAllWindows()
 
         # Calculate and print average processing time
         average_time = np.mean(processing_times)
@@ -135,16 +123,14 @@ def process_video(video_path, model_path, densenet121_model_path, output_path, f
             cap.release()
         if 'out' in locals():
             out.release()
-        cv2.destroyAllWindows()
         raise
 
-
 if __name__ == "__main__":
-    input_video = "Video Test/1.mp4"
-    yolo_model_weights = "Models/runs/train/weights/best.pt" #put global path
+    input_video = ".mp4"
+    yolo_model_weights = "Models/runs/train/weights/best.pt"
     densenet121_model_weights = "Models/DenseNet.pth.tar"
-    output_video = "output_video_with_labels_4.mp4"
-    frame_skip = 0
+    output_video = ".mp4"
+    frame_skip = 1
     resize_dimensions = (1280, 720)
 
     process_video(

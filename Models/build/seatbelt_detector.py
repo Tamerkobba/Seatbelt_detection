@@ -9,32 +9,6 @@ from PIL import Image
 from sklearn.model_selection import train_test_split
 from torchvision.models import densenet121, DenseNet121_Weights
 
-df=pd.read_csv('../../../classification_images/labels.csv')
-
-df = df.drop_duplicates()
-
-def determine_class(row):
-    if row['seatbelt'] == 1:
-        return 'All Wearing Seatbelts'
-    elif row['no_seatbelt'] == 1:
-        return 'No Seatbelt'
-    return 'Unknown'
-
-df['Class'] = df.apply(determine_class, axis=1)
-train_df, valid_df = train_test_split(
-    main_df,
-    test_size=0.2,
-    stratify=main_df['Class'],
-    random_state=420
-)
-
-label_mapping = {'All Wearing Seatbelts': 0, 'No Seatbelt': 1}
-train_df['label'] = train_df.iloc[:, 1].map(label_mapping)
-valid_df['label'] = valid_df.iloc[:, 1].map(label_mapping)
-
-train_df = pd.get_dummies(train_df, columns=['label'], prefix='', prefix_sep='')
-valid_df = pd.get_dummies(valid_df, columns=['label'], prefix='', prefix_sep='')
-
 class ImageDataset(Dataset):
     def __init__(self, dataframe, root_dir, transform=None):
         self.df = dataframe
@@ -71,41 +45,74 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-
-# Create datasets
-train_dataset = ImageDataset(train_df, '../../../classification_images', transform=transform)
-val_dataset = ImageDataset(valid_df, '../../../classification_images', transform=transform)
-
-# Create dataloaders
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4)
-val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False, num_workers=4)
-
-
-weights = DenseNet121_Weights.IMAGENET1K_V1
-model = densenet121(weights=weights)
-numb_ftrs = model.classifier.in_features
-model.classifier = nn.Linear(numb_ftrs, 2)
-# Update the criterion to include class weights
-
-criterion = nn.CrossEntropyLoss()
-
-optimizer = optim.SGD(model.parameters(), lr=0.0001, momentum=0.7, weight_decay=0.001)
-#optimizer= optim.Adam(model.parameters(), lr=0.0001,weight_decay=5e-4)
-scheduler = torch.optim.lr_scheduler.OneCycleLR(
-    optimizer, max_lr=0.01, steps_per_epoch=len(train_loader), epochs=50
-)
-model.to('cuda')
-
 def save_checkpoint(state,filename='DenseNet.pth.tar'):
     print("=> Saving checkpoint")
     torch.save(state, filename)
-
+def load_checkpoint(checkpoint_path, model, optimizer):
+    """
+    Load a checkpoint and restore the model and optimizer state.
+    """
+    print(f"=> Loading checkpoint from {checkpoint_path}")
+    checkpoint = torch.load(checkpoint_path, weights_only=True)
+    model.load_state_dict(checkpoint['state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+    return model, optimizer
 
 def main():
-    # Define your model, datasets, dataloaders, and training logic here
-    EPOCHS = 50
-    best_val_loss = float('inf')
+    df = pd.read_csv('')
 
+    df = df.drop_duplicates()
+
+    def determine_class(row):
+        if row['seatbelt'] == 1:
+            return 'All Wearing Seatbelts'
+        elif row['no_seatbelt'] == 1:
+            return 'No Seatbelt'
+        return 'Unknown'
+
+    df['Class'] = df.apply(determine_class, axis=1)
+    train_df, valid_df = train_test_split(
+        df,
+        test_size=0.2,
+        stratify=df['Class'],
+        random_state=420
+    )
+
+    label_mapping = {'All Wearing Seatbelts': 0, 'No Seatbelt': 1}
+    train_df['label'] = train_df.iloc[:, 1].map(label_mapping)
+    valid_df['label'] = valid_df.iloc[:, 1].map(label_mapping)
+
+    train_df = pd.get_dummies(train_df, columns=['label'], prefix='', prefix_sep='')
+    valid_df = pd.get_dummies(valid_df, columns=['label'], prefix='', prefix_sep='')
+
+    # Create datasets
+    train_dataset = ImageDataset(train_df, '', transform=transform)
+    val_dataset = ImageDataset(valid_df, '', transform=transform)
+
+    # Create dataloaders
+    train_loader = DataLoader(train_dataset, batch_size=16, shuffle=False, num_workers=4)
+    val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False, num_workers=4)
+
+    # Define your model, datasets, dataloaders, and training logic here
+    weights = DenseNet121_Weights.IMAGENET1K_V1
+    model = densenet121(weights=weights)
+    numb_ftrs = model.classifier.in_features
+    model.classifier = nn.Linear(numb_ftrs, 2)
+    # Update the criterion to include class weights
+
+    criterion = nn.CrossEntropyLoss()
+
+    optimizer = optim.SGD(model.parameters(), lr=0.00001, momentum=0.7, weight_decay=0.01)
+    #optimizer= optim.Adam(model.parameters(), lr=0.0001,weight_decay=5e-4)
+    model.to('cuda')
+    EPOCHS = 120
+    best_val_loss = float('inf')
+    checkpoint_path = 'DenseNet.pth.tar'
+    if os.path.exists(checkpoint_path):
+        model, optimizer = load_checkpoint(checkpoint_path, model, optimizer)
+        print("Checkpoint loaded successfully.")
+    else:
+        print("No checkpoint found. Training from scratch.")
     # Training loop
     for epoch in range(EPOCHS):
         model.train()
@@ -126,7 +133,6 @@ def main():
             running_loss += loss.item()
 
         avg_loss = sum(losses) / len(losses)
-        scheduler.step()
         # Validation phase
         model.eval()
         val_losses = []

@@ -2,13 +2,13 @@ import os
 import csv
 
 # Define the path to your image folder
-image_folder_path = r'../resnet_images/no_seatbelts'  # Adjust path if needed
+image_folder_path = r''  # Adjust path if needed
 
 # Get the list of all image files in the folder
 image_files = [f for f in os.listdir(image_folder_path) if f.endswith('.jpg')]
 
 # Define the CSV file path to output the result
-csv_file_path = r'../resnet_images/images2.csv'  # Adjust path if needed
+csv_file_path = r''  # Adjust path if needed
 
 # Open the CSV file for writing
 with open(csv_file_path, mode='w', newline='') as csv_file:
